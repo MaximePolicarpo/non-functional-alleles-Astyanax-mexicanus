@@ -1045,11 +1045,15 @@ gatk MergeVcfs -I filtered_snps.vcf -I filtered_indels.vcf -O filtered_snps_inde
 gatk SelectVariants -V filtered_snps_indels.vcf -O Indels_SNPs_HardFiltered_0nocall.vcf --max-nocall-number 10 --exclude-filtered true
 java -jar jvarkit/dist/vcffilterjs.jar -e 'function accept(v) {var g0= v.getGenotype(0);for(var i=1;i< v.getNSamples();i++) {if(!v.getGenotype(i).sameGenotype(g0)) return true;} return false;}accept(variant);' Indels_SNPs_HardFiltered_0nocall.vcf > Indels_SNPs_HardFiltered_0nocall_0invariant.vcf
 
+## Transform VCF with multiple alleles at the same position to a single alelle per line VCF  (Split Multiallelic Variants, https://glow.readthedocs.io/en/latest/etl/variant-splitter.html)
+
+bcftools norm -m-any --check-ref -w -f GCF_000372685.2_Astyanax_mexicanus-2.0_genomic.fna Indels_SNPs_HardFiltered_0nocall_0invariant.vcf -o Indels_SNPs_HardFiltered_0nocall_0invariant_split.vcf
+
 
 
 ## Annotate variant with VEP and extract null alleles
 
-vep --cache --canonical --offline -i Indels_SNPs_HardFiltered_0nocall_0invariant_modif_split.vcf -o VEP_annotation.vcf --species astyanax_mexicanus --protein --total_length --coding_only --vcf 
+vep --cache --canonical --offline -i Indels_SNPs_HardFiltered_0nocall_0invariant_split.vcf -o VEP_annotation.vcf --species astyanax_mexicanus --protein --total_length --coding_only --vcf 
 
 
 bcftools +split-vep VEP_annotation.vcf -l 
